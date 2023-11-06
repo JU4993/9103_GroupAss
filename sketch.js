@@ -1,8 +1,27 @@
+let music;
+let level;
+let fft;
+let verticalSquares = []
+let horizontalSquares = []
+
+function preload() {
+  music = loadSound('assets/music.mp3');
+}
+
 function setup() {
   //We will make the canvas the same size as the image using its properties 
   //the sample image is stored in the assets folder
-  createCanvas(800,800);
-  background(255);
+  let cnv = createCanvas(800,800);
+  cnv.mouseClicked(togglePlay);
+  // Initialize music and level
+  //music.play();
+  level = new p5.Amplitude();
+  fft = new p5.FFT();
+  fft.setInput(music);
+  level.setInput(music);
+
+  
+  
 
   // coordinate of the vertical lines
   verticalLinePositions = [
@@ -39,83 +58,129 @@ function setup() {
   
   // The main theme colors of the whole artwork
   colors = {
-    grey:   {r: 215, g: 215, b: 215},
+    grey:   {r: 237, g: 212, b: 32},
     blue:   {r: 58,  g: 88,  b: 155},
     red:    {r: 175, g: 59,  b: 44},
-    yellow: {r: 237, g: 212, b: 32}
+    yellow: {r: 210, g: 210, b: 210}
+  }
+
+  brightColors = {
+    grey:   {r: 220, g: 220, b: 220},
+    blue:   {r: 88, g: 118,  b: 185},
+    red:    {r: 205, g: 79,  b: 64},
+    yellow: {r: 255, g: 230, b: 82},
+  }
+
+  brighterColors = {
+    grey: {r:235, g:235, b:235},
+    blue: {r:255, g:20, b:0},
+    red: {r:255, g:235, b:0},
+    yellow: {r:0, g:188, b:255}
   }
 
   // pick the first three of the colors
-  squareColors = [colors.blue, colors.red, colors.grey]
+  squareColors = ["blue", "red", "grey"]
 
   squares =[
-    {x:63.5,  y:150,    w: 44, h: 40,     color: colors.blue},
-    {x:63.5,  y:537.5,  w: 44, h: 40,     color: colors.blue},
-
-    {x:120,   y:28,     w: 40,  h: 99.5,  color: colors.red},
-    {x:120,   y:85,     w: 40,  h: 30,    color: colors.grey},
-    {x:107.5, y:230,    w: 70, h: 50,     color: colors.yellow},
-    {x:130,   y:245,    w: 20, h: 20,     color: colors.grey},
-    {x:107.5, y:400,    w: 70, h:47.5,    color: colors.red},
-    {x:107.5, y:627.5,  w: 70, h: 50,     color: colors.yellow},
-    {x:130,   y:642.5,  w: 20, h: 20,     color: colors.grey},
-
-    {x:200,   y:35.5,  w: 80,  h: 80,     color: colors.red},
-    {x:220,   y:55.5,  w: 40,  h: 40,     color: colors.grey},
-    {x:200,   y:115.5, w: 80,  h: 12.5,   color: colors.grey},
-    {x:220,   y:362.5, w: 80,  h: 12.5,   color: colors.yellow},
-    {x:220,   y:375,   w: 80,  h: 72.5,   color: colors.blue},
-    {x:235,   y:400,   w: 40,  h: 35,     color: colors.yellow},
-    {x:330,   y:292.5, w: 60,  h: 55,     color: colors.yellow},
-    {x:330,   y:347.5, w: 60,  h: 15,     color: colors.grey},
-    {x:330,   y:362.5, w: 60,  h: 15,     color: colors.yellow},
-    {x:330,   y:377.5, w: 60,  h: 45,     color: colors.grey},
-    {x:330,   y:422.5, w: 60,  h: 25.5,   color: colors.yellow},
-
-    {x: 360,  y:752.5,  w:50, h:47.5,     color: colors.red},
-    
-    {x:500,   y:142.5, w: 80, h: 150,     color: colors.blue},
-    {x:500,   y:182.5, w: 80, h: 80,      color: colors.red},
-    {x:520,   y:202.5, w: 40,  h: 40,     color: colors.yellow},
-
-    {x:550,   y: 362.5, w: 80, h: 85,     color: colors.red },
-    {x:570,   y: 383.5, w: 40,  h: 40,    color: colors.grey },
-    {x:550,   y:462.5, w: 80,  h: 20,     color: colors.red },
-    {x:550,   y:482.5, w: 80,  h: 20,     color: colors.grey },
-
-    {x:687.5, y:530, w:50, h: 40, color: colors.blue},
-    {x:687.5, y:590, w:50, h: 40, color: colors.red},
-
-    {x:717.5, y:75, w:55, h: 30, color:colors.blue},
-    {x:702.5, y:180, w:50, h: 50, color:colors.red},
+    {x:63.5,  y:150,    w: 44, h: 40,     color: "blue"},
+    {x:63.5,  y:537.5,  w: 44, h: 40,     color: "blue"},
+    {x:120,   y:28,     w: 40,  h: 99.5,  color: "red" },
+    {x:120,   y:85,     w: 40,  h: 30,    color: "grey"},
+    {x:107.5, y:230,    w: 70, h: 50,     color: "yellow"},
+    {x:130,   y:245,    w: 20, h: 20,     color: "grey"},
+    {x:107.5, y:400,    w: 70, h:47.5,    color: "red"},
+    {x:107.5, y:627.5,  w: 70, h: 50,     color: "yellow"},
+    {x:130,   y:642.5,  w: 20, h: 20,     color: "grey"},
+    {x:200,   y:35.5,  w: 80,  h: 80,     color: "red"},
+    {x:220,   y:55.5,  w: 40,  h: 40,     color: "grey"},
+    {x:200,   y:115.5, w: 80,  h: 12.5,   color: "grey"},
+    {x:220,   y:362.5, w: 80,  h: 12.5,   color: "yellow"},
+    {x:220,   y:375,   w: 80,  h: 72.5,   color: "blue"},
+    {x:235,   y:400,   w: 40,  h: 35,     color: "yellow"},
+    {x:330,   y:292.5, w: 60,  h: 55,     color: "yellow"},
+    {x:330,   y:347.5, w: 60,  h: 15,     color: "grey"},
+    {x:330,   y:362.5, w: 60,  h: 15,     color: "yellow"},
+    {x:330,   y:377.5, w: 60,  h: 45,     color: "grey"},
+    {x:330,   y:422.5, w: 60,  h: 25.5,   color: "yellow"},
+    {x: 360,  y:752.5,  w:50, h:47.5,     color: "red"},
+    {x:500,   y:142.5, w: 80, h: 150,     color: "blue"},
+    {x:500,   y:182.5, w: 80, h: 80,      color: "red"},
+    {x:520,   y:202.5, w: 40,  h: 40,     color: "yellow"},
+    {x:550,   y: 362.5, w: 80, h: 85,     color: "red"},
+    {x:570,   y: 383.5, w: 40,  h: 40,    color: "grey"},
+    {x:550,   y:462.5, w: 80,  h: 20,     color: "red"},
+    {x:550,   y:482.5, w: 80,  h: 20,     color: "grey"},
+    {x:687.5, y:530, w:50, h: 40,         color: "blue"},
+    {x:687.5, y:590, w:50, h: 40,         color: "red"},
+    {x:717.5, y:75, w:55, h: 30,          color: "blue"},
+    {x:702.5, y:180, w:50, h: 50,         color: "red"},
   ]
 
-  drawLines();
+  //drawLines();
   drawSquaresWithinLines();
-  drawSquaresOutOfLines();
+  //drawSquaresOutOfLines();
 }
 
 function draw() {
-  // Commented out the draw functions here since 
-  // there would be infinite loop and could not find the error
-  // move these to the setup function
+  background(255);
+  let currentLevel = level.getLevel();
+  let spectrum = fft.analyze();
+  let currentTime = music.currentTime();
 
-  // drawLines();
-  // drawSquaresWithinLines();
-  // drawSquaresOutOfLines();
+  let currentColors = brightColors;
+
+  if (currentTime > 47 && currentTime < 82) {
+    currentColors = colors;
+  } else if (currentTime > 82) {
+    currentColors = brighterColors;
+  } 
+
+  drawLines(currentColors);
+  
+  strokeWeight(0);
+  stroke(0);
+
+  for (let i = 0; i < verticalSquares.length; i ++) {
+    let square = verticalSquares[i]
+    let r = currentColors[square.color].r
+    let g = currentColors[square.color].g
+    let b = currentColors[square.color].b
+    let index = int(map(i, 0, verticalSquares.length, 0, spectrum.length - 1))
+    let range = map(spectrum[index], 0, 255, 0, 400);
+    fill(r, g, b);
+    rect(square.x, square.y -range, square.size, square.size);
+  }
+
+  for (let square of horizontalSquares) {
+    let r = currentColors[square.color].r
+    let g = currentColors[square.color].g
+    let b = currentColors[square.color].b
+    fill(r, g, b);
+    rect(square.x, square.y, square.size, square.size);
+  }
+
+  for (let i = 0; i < squares.length; i++) {
+    let s = squares[i];
+    let sizeMultiplier = 1 + currentLevel; // Adjust the multiplier as needed
+    let r = currentColors[s.color].r
+    let g = currentColors[s.color].g
+    let b = currentColors[s.color].b
+    fill(r, g, b);
+    rect(s.x, s.y, s.w * sizeMultiplier, s.h * sizeMultiplier);
+  }
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
 
-function drawLines() {
+function drawLines(currentColors) {
   // Set the stroke weight (line thickness)
   strokeWeight(15); // Set the line thickness to 4 pixels
   // Set the line endings to sharp (SQUARE)
   strokeCap(SQUARE);
   //the default color of the line is yellow
-  stroke(230,200,35); // Set the line color to yellow
+  stroke(currentColors["yellow"].r,currentColors["yellow"].g,currentColors["yellow"].b ); // Set the line color to yellow
   // Draw vertical lines
   for (let i = 0; i < verticalLinePositions.length; i++) {
     let l = verticalLinePositions[i];
@@ -135,8 +200,8 @@ function drawSquaresWithinLines() {
   // the color of the square will be random chosen from the squareColors array
   strokeWeight(0);
   stroke(0);
-  let columnNumbers = 12
-  let rowNumbers = 11
+  let columnNumbers = 13
+  let rowNumbers = 12
   //draw random numbers of the square on vertical lines
   for (let i = 0; i < columnNumbers; i++) {
     let l = verticalLinePositions[i];
@@ -157,10 +222,10 @@ function drawSquaresWithinLines() {
     for (let j = 0; j < squareNumbers; j++) {
       // generate the random y coordinate for the square
       // make sure its less than the end of the line
-      let ys = random(l.ys, l.ye-7.5);
-      let color = random(squareColors);
-      fill(color.r, color.g, color.b);
-      rect(l.xs-7.5, ys-7.5, 15, 15);
+      //let ys = random(l.ys, l.ye-7.5);
+      verticalSquares.push({x: l.xs-7.5, y: l.ye - j *15, color: random(squareColors), size: 15});
+      //fill(color.r, color.g, color.b);
+      //rect(l.xs-7.5, ys-7.5, 15, 15);
     }
   }
 
@@ -189,9 +254,10 @@ function drawSquaresWithinLines() {
       //generate the random x coordinate for the square
       // make sure its less than the end of the line
       let xs = random(l.xs, l.xe-7.5);
-      let color = random(squareColors);
-      fill(color.r, color.g, color.b);
-      rect(xs-7.5, l.ys-7.5, 15, 15);
+      horizontalSquares.push({x: xs-7.5, y: l.ys-7.5, color: random(squareColors), size: 15})
+      //let color = random(squareColors);
+      //fill(color.r, color.g, color.b);
+      //rect(xs-7.5, l.ys-7.5, 15, 15);
     }
   }
 
@@ -201,12 +267,19 @@ function drawSquaresOutOfLines() {
   // Draw the big squares that is stick to the lines 
   // or just overlap it 
 
-  // Initial: draw some fixed position squares
-  // Might use random after finding the displine of the position of the squares
+  //for (let i = 0; i < squares.length; i++) {
+  //  let s = squares[i];
+  //  fill(s.color.r, s.color.g, s.color.b);
+  //  rect(s.x, s.y, s.w, s.h);
+  //}
+}
 
-  for (let i = 0; i < squares.length; i++) {
-    let s = squares[i];
-    fill(s.color.r, s.color.g, s.color.b);
-    rect(s.x, s.y, s.w, s.h);
+function togglePlay() {
+  if (music.isPlaying() ){
+    music.pause();
+  } else {
+    music.play()
+		level = new p5.Amplitude();
+		level.setInput(music);
   }
 }
